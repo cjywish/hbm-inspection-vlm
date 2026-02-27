@@ -1,27 +1,43 @@
 import sqlite3
 import pandas as pd
-import json
+from datetime import datetime
 
-class InspectionDB:
-    def __init__(self, db_path='hbm_factory.db'):
-        self.db_path = db_path
-        self._init_table()
+# 데이터베이스 연결 및 테이블 초기화
+def init_db():
+    conn = sqlite3.connect('hbm_factory.db')
+    cursor = conn.cursor()
+    # 테이블 생성 (기존에 없으면 생성)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS inspections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            temp REAL,
+            pressure REAL,
+            analysis_text TEXT,
+            status TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
-    def _init_table(self):
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''CREATE TABLE IF NOT EXISTS logs
-                (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                 status TEXT, temp REAL, pressure REAL, analysis TEXT, user_label TEXT, is_corrected INTEGER DEFAULT 0)''')
+# 검사 결과 저장 함수
+def save_inspection(telemetry, analysis_text, status):
+    conn = sqlite3.connect('hbm_factory.db')
+    cursor = conn.cursor()
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    cursor.execute('''
+        INSERT INTO inspections (timestamp, temp, pressure, analysis_text, status)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (now, telemetry['temp'], telemetry['pressure'], analysis_text, status))
+    
+    conn.commit()
+    conn.close()
 
-    def log_result(self, status, temp, pressure, analysis):
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute("INSERT INTO logs (status, user_label, temp, pressure, analysis) VALUES (?,?,?,?,?)",
-                         (status, status, temp, pressure, analysis))
-
-    def update_label(self, log_id, new_label):
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute("UPDATE logs SET user_label = ?, is_corrected = 1 WHERE id = ?", (new_label, log_id))
-
-    def get_all_logs(self):
-        with sqlite3.connect(self.db_path) as conn:
-            return pd.read_sql_query("SELECT * FROM logs ORDER BY id DESC", conn)
+# 전체 검사 이력 조회 함수 (Pandas DataFrame 반환)
+def get_all_inspections():
+    conn = sqlite3.connect('hbm_factory.db')
+    query = "SELECT * FROM inspections ORDER BY timestamp DESC"
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df

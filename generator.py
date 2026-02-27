@@ -2,24 +2,35 @@ import cv2
 import numpy as np
 import random
 
-def generate_hbm_sample(defect_type="Normal"):
-    """가상 HBM 기판 이미지 및 센서 데이터 생성"""
-    # 기본 이미지 생성 (400x600)
-    img = np.zeros((400, 600, 3), dtype=np.uint8) + 45
-    for x in range(50, 600, 100):
-        for y in range(50, 400, 100):
-            cv2.circle(img, (x, y), 22, (180, 180, 180), -1)
-
-    # 불량 합성 로직
-    if defect_type == "Microbump Bridge":
-        cv2.rectangle(img, (150, 42), (250, 58), (180, 180, 180), -1)
-    elif defect_type == "TSV Void":
-        cv2.circle(img, (250, 150), 7, (10, 10, 10), -1)
-
-    # 가상 센서 데이터 (정상 범위를 기준으로 랜덤 생성)
+def generate_hbm_sample():
+    # 1. 가상의 HBM 단면 이미지 생성 (640x480)
+    img = np.full((480, 640, 3), 40, dtype=np.uint8) # 어두운 배경
+    
+    # 센서 데이터 시뮬레이션
+    # 정상 범위: Temp 230~250, Pressure 40~55
+    temp = round(random.uniform(220, 270), 1)
+    pressure = round(random.uniform(35, 65), 1)
+    
+    status = "정상"
+    if temp > 260 or pressure > 60:
+        status = "불량"
+        color = (0, 0, 255) # Red (불량일 때 이미지에 붉은 점 생성)
+    else:
+        color = (200, 200, 200) # Gray
+        
+    # 가상의 반도체 칩 범프(Bump) 패턴 그리기
+    for i in range(100, 500, 60):
+        for j in range(100, 400, 60):
+            cv2.circle(img, (i, j), 15, color, -1)
+            
+    # 노이즈 추가
+    noise = np.random.normal(0, 5, img.shape).astype(np.uint8)
+    img = cv2.add(img, noise)
+    
     telemetry = {
-        "temp": round(random.uniform(250, 275), 1),
-        "pressure": round(random.uniform(100, 150), 1)
+        "temp": temp,
+        "pressure": pressure,
+        "true_status": status
     }
     
     return img, telemetry
