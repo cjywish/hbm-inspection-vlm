@@ -17,7 +17,7 @@ class VLMInspector:
             return
 
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
         
         # [기능 3] 전문 프롬프트 튜닝
         self.system_prompt = """
@@ -53,4 +53,5 @@ class VLMInspector:
             response = self.model.generate_content([self.system_prompt + prompt_context, pil_img])
             return response.text
         except Exception as e:
+
             return f"분석 에러 발생: {str(e)}"
