@@ -49,13 +49,19 @@ with col1:
         st.warning("먼저 샘플 생성 버튼을 눌러주세요.")
 
 with col2:
-    st.subheader("🧠 AI VLM Analysis")
-    if st.button("Run AI Analysis", type="primary"):
+    st.subheader("🧠 AI VLM & PINN Analysis")
+    if st.button("Run Hybrid Analysis", type="primary"):
         if st.session_state.sample_img is not None:
-            with st.spinner("VLM 엔진이 공정 이미지를 정밀 분석 중입니다..."):
-                # AI 분석 실행
-                analysis_result = inspector.analyze(st.session_state.sample_img, st.session_state.telemetry)
-                status = extract_status(analysis_result)
+            with st.spinner("VLM과 PINN이 협력하여 분석 중입니다..."):
+                # 수정된 통합 분석 함수 호출
+                full_report, internal_temp = inspector.analyze_with_physics(
+                    st.session_state.sample_img, st.session_state.telemetry
+                )
+                status = extract_status(full_report)
+                
+                # UI 출력
+                st.metric("PINN 예측 내부 온도", f"{internal_temp:.1f} °C")
+                st.write(full_report)
                 
                 # [기능 1] 실시간 알림 (Alert & Toast)
                 if "불량" in status:
