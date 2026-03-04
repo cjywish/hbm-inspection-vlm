@@ -76,7 +76,7 @@ with col2:
 
                 # 분석 결과 출력
                 st.markdown(f"**[AI 판정 결과]**")
-                st.write(analysis_result)
+                st.write(full_report)
                 
                 # DB 저장
                 #save_inspection(st.session_state.telemetry, analysis_result, status)
