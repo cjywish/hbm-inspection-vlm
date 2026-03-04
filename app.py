@@ -79,7 +79,8 @@ with col2:
                 st.write(analysis_result)
                 
                 # DB 저장
-                save_inspection(st.session_state.telemetry, analysis_result, status)
+                #save_inspection(st.session_state.telemetry, analysis_result, status)
+                save_inspection(st.session_state.telemetry, full_report, status)
         else:
             st.error("분석할 이미지가 없습니다.")
 
